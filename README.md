@@ -2,29 +2,29 @@
 
 # 📚 BookLens – Book Recommendation System
 
-#### **  In Short **
+#### #  In Short #
 
-BookLens is a Flask-based web application that recommends books using **item-based collaborative filtering** and **cosine similarity**.
+BookLens is a Flask-based web application that recommends books using #item-based collaborative filtering# and #cosine similarity#.
 
 Users can:
 
-* View **Top 50 Popular Books**
-* Get **similar book recommendations** based on user ratings
+* View #Top 50 Popular Books#
+* Get #similar book recommendations# based on user ratings
 
-The system uses **preprocessed pickle files**, ensuring fast performance without reprocessing large datasets.
+The system uses #preprocessed pickle files#, ensuring fast performance without reprocessing large datasets.
 
 ---
 
 ####  BAse FOundation
 
-* Recommendation technique: **Collaborative Filtering**
-* Similarity metric: **Cosine Similarity**
+* Recommendation technique: #Collaborative Filtering#
+* Similarity metric: #Cosine Similarity#
 * Data processing: Done offline in Jupyter Notebook
 * Runtime: Uses `.pkl` files for fast inference 
 
 ---
 
-** Tech Stack**
+# Tech Stack#
 
 * Backend: Flask
 * Data: pandas, NumPy
@@ -33,7 +33,7 @@ The system uses **preprocessed pickle files**, ensuring fast performance without
 
 ---
 
-#### ** Project Structure**
+#### # Project Structure#
 
 ```
 Book Recommendation/
@@ -57,7 +57,7 @@ Book Recommendation/
 
 ---
 
-#### ** Run Locally**
+#### # Run Locally#
 
 ```bash
 py frontend\app.py
@@ -112,7 +112,7 @@ graph TB
 
 ---
 
-### ** Application Flow (ASCII)**
+### # Application Flow (ASCII)#
 
 ```
 ┌───────────────────────────────────────────────┐
@@ -128,7 +128,7 @@ graph TB
 
 ---
 
-###                **                   🌐 Request Lifecycle **
+###                #                   🌐 Request Lifecycle #
 
 ```mermaid
 graph LR
@@ -154,7 +154,7 @@ graph LR
 
 ---
 
-### ** CRUD-like Flow (Mindmap)**
+### # CRUD-like Flow (Mindmap)#
 
 ```mermaid
 mindmap
@@ -181,7 +181,7 @@ mindmap
 
 ---
 
-### ** Recommendation Logic**
+### # Recommendation Logic#
 
 ```
 User Input
@@ -199,7 +199,7 @@ Return Top 4 books
 
 ---
 
-### ** Data Pipeline**
+### # Data Pipeline#
 
 ```mermaid
 graph TD
@@ -222,7 +222,7 @@ graph TD
 
 ---
 
-### ** Limitations**
+### # Limitations#
 
 * Only works for books in dataset
 * No real-time learning
@@ -231,9 +231,9 @@ graph TD
 
 ---
 
-### ** Key Takeaways**
+### # Key Takeaways#
 
-* Fast runtime using **pickle files**
+* Fast runtime using #pickle files#
 * Scalable architecture (separate training + serving)
 * Clean separation:
 
@@ -243,9 +243,9 @@ graph TD
 
 ---
 
-### ** Summary**
+### # Summary#
 
-BookLens transforms raw rating data into a **real-time recommendation system** by:
+BookLens transforms raw rating data into a #real-time recommendation system# by:
 
 * Precomputing similarity
 * Serving via Flask
