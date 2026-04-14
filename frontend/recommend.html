@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BookLens — Recommend</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #0f0f13;
+      color: #e8e8f0;
+      min-height: 100vh;
+    }
+
+    /* ── Navbar ── */
+    .navbar {
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(20, 10, 40, 0.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(168, 85, 247, 0.2);
+      padding: 0 2rem;
+      height: 60px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .nav-brand { font-size: 18px; font-weight: 600; color: #fff; display: flex; align-items: center; gap: 8px; }
+    .nav-links { display: flex; gap: 2rem; list-style: none; }
+    .nav-links a { color: rgba(255,255,255,0.6); text-decoration: none; font-size: 14px; transition: color 0.2s; }
+    .nav-links a:hover, .nav-links a.active { color: #c084fc; }
+
+    /* ── Hero ── */
+    .hero {
+      background: linear-gradient(135deg, #1a0a2e 0%, #16213e 100%);
+      padding: 3.5rem 2rem 2.5rem;
+      border-bottom: 1px solid rgba(168, 85, 247, 0.15);
+    }
+    .badge {
+      display: inline-block;
+      background: rgba(168,85,247,0.15); color: #c084fc;
+      border: 1px solid rgba(168,85,247,0.3);
+      border-radius: 20px; font-size: 12px; font-weight: 500;
+      padding: 4px 14px; margin-bottom: 14px;
+      letter-spacing: 0.5px; text-transform: uppercase;
+    }
+    .hero h1 { font-size: 42px; font-weight: 600; color: #fff; margin-bottom: 8px; }
+    .hero p  { color: rgba(255,255,255,0.45); font-size: 15px; }
+
+    /* ── Search section ── */
+    .search-section { padding: 2.5rem 2rem 0; max-width: 1400px; margin: 0 auto; }
+    .search-card {
+      background: #1a1a26;
+      border: 1px solid rgba(168,85,247,0.25);
+      border-radius: 16px;
+      padding: 2rem;
+    }
+    .search-card h2 { font-size: 16px; font-weight: 500; color: #e8e8f0; margin-bottom: 16px; }
+    .search-row { display: flex; gap: 12px; }
+    .search-row input {
+      flex: 1;
+      background: #0f0f13;
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 10px;
+      padding: 12px 16px;
+      color: #e8e8f0; font-size: 15px;
+      font-family: 'Inter', sans-serif;
+      transition: border-color 0.2s;
+      outline: none;
+    }
+    .search-row input::placeholder { color: rgba(255,255,255,0.25); }
+    .search-row input:focus { border-color: rgba(168,85,247,0.5); }
+    .btn-search {
+      background: linear-gradient(135deg, #7c3aed, #a855f7);
+      border: none; border-radius: 10px;
+      color: #fff; font-size: 15px; font-weight: 500;
+      padding: 12px 28px; cursor: pointer;
+      font-family: 'Inter', sans-serif;
+      transition: opacity 0.2s, transform 0.1s;
+    }
+    .btn-search:hover { opacity: 0.9; }
+    .btn-search:active { transform: scale(0.98); }
+    .error-message {
+      margin-top: 14px;
+      color: #fca5a5;
+      font-size: 14px;
+    }
+
+    /* ── Results ── */
+    .results-section { padding: 2rem; max-width: 1400px; margin: 0 auto; }
+    .results-heading {
+      font-size: 15px; font-weight: 500; color: rgba(255,255,255,0.5);
+      margin-bottom: 1.5rem; padding-top: 0.5rem;
+    }
+
+    .books-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 20px;
+    }
+    .book-card {
+      background: #1a1a26;
+      border: 1px solid rgba(255,255,255,0.07);
+      border-radius: 14px; overflow: hidden;
+      transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
+    }
+    .book-card:hover {
+      transform: translateY(-4px);
+      border-color: rgba(168,85,247,0.4);
+      box-shadow: 0 12px 32px rgba(108,61,224,0.2);
+    }
+    .card-img-wrap {
+      width: 100%; height: 240px; overflow: hidden;
+      background: linear-gradient(135deg, #2d1b4e, #1e3a5f);
+    }
+    .card-img-wrap img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .card-body { padding: 14px; }
+    .card-title {
+      font-size: 13px; font-weight: 500; color: #e8e8f0;
+      margin-bottom: 4px; line-height: 1.4;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .card-author { font-size: 12px; color: rgba(255,255,255,0.4); }
+
+    /* ── Empty state ── */
+    .empty-state {
+      text-align: center;
+      padding: 4rem 2rem;
+      color: rgba(255,255,255,0.25);
+    }
+    .empty-state .icon { font-size: 48px; margin-bottom: 16px; display: block; }
+    .empty-state p { font-size: 15px; }
+
+    /* ── Footer ── */
+    footer {
+      text-align: center; padding: 2rem;
+      color: rgba(255,255,255,0.2); font-size: 12px;
+      border-top: 1px solid rgba(255,255,255,0.05);
+      margin-top: 3rem;
+    }
+  </style>
+</head>
+<body>
+
+  <nav class="navbar">
+    <div class="nav-brand">📚 BookLens</div>
+    <ul class="nav-links">
+      <li><a href="/">Home</a></li>
+      <li><a href="/recommend" class="active">Recommend</a></li>
+      <li><a href="#">Contact</a></li>
+    </ul>
+  </nav>
+
+  <div class="hero">
+    <div class="badge">AI Powered</div>
+    <h1>Find Your Next Read</h1>
+    <p>Enter a book you love and discover similar ones</p>
+  </div>
+
+  <div class="search-section">
+    <div class="search-card">
+      <h2>Search by book title</h2>
+      <form action="/recommend_books" method="post">
+        <div class="search-row">
+          <input type="text" name="user_input" placeholder="e.g. The Alchemist, 1984, Harry Potter…" autocomplete="off">
+          <button type="submit" class="btn-search">Recommend →</button>
+        </div>
+      </form>
+      {% if error %}
+        <p class="error-message">{{ error }}</p>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="results-section">
+    {% if data %}
+      <p class="results-heading">{{ data|length }} books recommended for you</p>
+      <div class="books-grid">
+        {% for item in data %}
+        <div class="book-card">
+          <div class="card-img-wrap">
+            <img src="{{ item[2] }}" alt="{{ item[0] }}" loading="lazy">
+          </div>
+          <div class="card-body">
+            <div class="card-title" title="{{ item[0] }}">{{ item[0] }}</div>
+            <div class="card-author">{{ item[1] }}</div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="empty-state">
+        {% if not error %}
+        <span class="icon">🔍</span>
+        <p>Your recommendations will appear here</p>
+        {% endif %}
+      </div>
+    {% endif %}
+  </div>
+
+  <footer>© 2025 BookLens · Built with Flask</footer>
+
+</body>
+</html>

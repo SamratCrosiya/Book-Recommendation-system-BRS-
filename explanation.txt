@@ -1,0 +1,1432 @@
+BOOK RECOMMENDATION SYSTEM - COMPLETE CODEBASE EXPLANATION
+===========================================================
+
+SHORT PROJECT DESCRIPTION
+=========================
+
+BookLens is a Flask-based book recommendation web app that helps users discover similar books from a selected title. It uses collaborative filtering and cosine similarity on user rating data to find books with similar reading patterns. The processed model data is stored in pickle files, making the website fast because it does not need to reprocess large CSV datasets every time it runs. The app includes a home page for top popular books and a recommendation page where users can search for a book and receive similar suggestions.
+
+
+Project name:
+BookLens / Book Recommendation System
+
+Main idea:
+This project is a Flask web application that shows popular books and recommends similar books based on user rating patterns.
+
+In simple words:
+When a user enters a book title, the system checks which other books have similar rating behavior from users and returns the closest matching books.
+
+
+1. SHORT INTRODUCTION TO SAY TO TEACHER
+=======================================
+
+This is a book recommendation web application built using Python Flask.
+
+The project uses a collaborative filtering recommendation approach. It does not recommend books by reading their story, genre, or author. Instead, it uses user rating behavior. If many users rated two books in a similar way, then those books are considered similar.
+
+The heavy data processing was done earlier in the Jupyter notebook. The final processed data was saved into pickle files. The Flask app loads those pickle files directly, so the website can start faster and does not need to process the large CSV files every time.
+
+The project has two main pages:
+
+1. Home page:
+   Shows the top 50 popular books.
+
+2. Recommend page:
+   Takes a book title from the user and shows 4 similar books.
+
+
+2. HOW TO RUN THE PROJECT
+=========================
+
+From the project root folder, run:
+
+py frontend\app.py
+
+Then open this URL in the browser:
+
+http://127.0.0.1:5000/
+
+If port 5000 is busy, run:
+
+$env:PORT="5001"; py frontend\app.py
+
+Then open:
+
+http://127.0.0.1:5001/
+
+
+3. PROJECT FILE STRUCTURE
+=========================
+
+Project root:
+
+Book Recommendation/
+|
+|-- frontend/
+|   |-- app.py
+|   |-- index.html
+|   |-- recommend.html
+|   |-- popular.pkl
+|   |-- pt.pkl
+|   |-- books.pkl
+|   |-- similarity_scores.pkl
+|   |-- requirements.txt
+|
+|-- Books.csv
+|-- Ratings.csv
+|-- Users.csv
+|-- book-recommender-system.ipynb
+|-- requirements.txt
+|-- Procfile
+|-- Procfile.txt
+|-- explanation.txt
+|-- flask/test.py
+
+
+4. FILE-BY-FILE EXPLANATION
+===========================
+
+frontend/app.py
+---------------
+
+This is the main backend file.
+
+It creates the Flask application, loads the pickle files, defines routes, receives user input, finds similar books, and sends data to the HTML pages.
+
+Important imports:
+
+import os
+import pickle
+from pathlib import Path
+import numpy as np
+from flask import Flask, render_template, request
+
+Meaning:
+
+os:
+Used to read environment variables like PORT and FLASK_DEBUG.
+
+pickle:
+Used to load saved Python objects from .pkl files.
+
+Path:
+Used to safely find files relative to app.py.
+
+numpy:
+Used for numerical operations, especially finding the index of a selected book.
+
+Flask:
+Used to create the web application.
+
+render_template:
+Used to render HTML pages with Python data.
+
+request:
+Used to read form input submitted by the user.
+
+
+frontend/index.html
+-------------------
+
+This is the home page.
+
+It displays the top 50 popular books as cards. Each card shows:
+
+- Book image
+- Book title
+- Book author
+- Average rating
+- Number of votes
+
+This file uses Jinja template syntax:
+
+{% for i in range(book_name|length) %}
+
+This loop runs once for every book sent from Flask.
+
+Example:
+
+{{ book_name[i] }}
+
+This prints the book title at index i.
+
+
+frontend/recommend.html
+-----------------------
+
+This is the recommendation page.
+
+It contains:
+
+- A search input
+- A submit button
+- A result area
+- Error message area
+
+Important form:
+
+<form action="/recommend_books" method="post">
+
+This means:
+
+- When the user submits the form, data is sent to the /recommend_books route.
+- The method is POST because we are sending user input to the server.
+
+Important input:
+
+<input type="text" name="user_input">
+
+The name user_input is important because app.py reads it using:
+
+request.form.get('user_input')
+
+
+popular.pkl
+-----------
+
+This pickle file stores the top 50 popular books.
+
+Current object type:
+DataFrame
+
+Current shape:
+(50, 5)
+
+Columns:
+
+- Book-Title
+- Book-Author
+- Image-URL-M
+- num_ratings
+- avg_rating
+
+Use in project:
+The home page uses this file to show the popular book cards.
+
+
+pt.pkl
+------
+
+pt means pivot table.
+
+This file stores a table where:
+
+- Rows are book titles
+- Columns are user IDs
+- Values are book ratings
+
+Current object type:
+DataFrame
+
+Current shape:
+(706, 810)
+
+Meaning:
+
+- 706 books are used for recommendation
+- 810 active users are used as rating features
+
+Example idea:
+
+Book title        User 1    User 2    User 3
+------------------------------------------------
+1984             10        0         8
+Harry Potter     0         9         10
+
+If a user has not rated a book, the value is 0.
+
+Use in project:
+The app uses pt.index to check whether the entered book exists in the recommendation system.
+
+
+books.pkl
+---------
+
+This file stores book details needed for showing recommendation results.
+
+Current object type:
+DataFrame
+
+Current shape:
+(242135, 3)
+
+Columns:
+
+- Book-Title
+- Book-Author
+- Image-URL-M
+
+Use in project:
+After the app finds similar book titles, it uses books.pkl to get the author name and image URL for each result.
+
+
+similarity_scores.pkl
+---------------------
+
+This file stores the similarity score between every pair of books in pt.pkl.
+
+Current object type:
+NumPy ndarray
+
+Current shape:
+(706, 706)
+
+Meaning:
+There are 706 books, so the matrix compares every book with every other book.
+
+Example:
+
+similarity_scores[0][1]
+
+This means:
+Similarity between book at index 0 and book at index 1.
+
+Use in project:
+When the user enters a book, the app finds that book's row in similarity_scores and sorts the scores to find the most similar books.
+
+
+Books.csv
+---------
+
+This is the original raw book dataset.
+
+It contains book details such as:
+
+- ISBN
+- Book title
+- Author
+- Year of publication
+- Publisher
+- Image URLs
+
+This file is mainly used during data preparation in the notebook.
+The Flask app does not need to read this CSV at runtime because processed book data is already saved in pickle files.
+
+
+Ratings.csv
+-----------
+
+This is the original raw ratings dataset.
+
+It contains:
+
+- User-ID
+- ISBN
+- Book-Rating
+
+This file is used to build the recommendation model in the notebook.
+The Flask app does not read it during normal website usage.
+
+
+Users.csv
+---------
+
+This file contains user details like:
+
+- User-ID
+- Location
+- Age
+
+In this project, the recommendation mainly depends on Ratings.csv and Books.csv.
+Users.csv may be available from the original dataset, but it is not directly used by the Flask app.
+
+
+book-recommender-system.ipynb
+----------------------------
+
+This is the Jupyter notebook used for data analysis and model preparation.
+
+It does the heavy work:
+
+1. Load Books.csv
+2. Load Ratings.csv
+3. Merge book and rating data
+4. Find popular books
+5. Build a pivot table
+6. Calculate similarity between books
+7. Save final objects into pickle files
+
+The Flask app uses the final pickle files generated from this notebook.
+
+
+requirements.txt
+----------------
+
+This file lists the Python packages required to run the project.
+
+Current packages:
+
+Flask==3.1.3
+gunicorn==23.0.0
+numpy==2.4.4
+pandas==3.0.2
+
+Meaning:
+
+Flask:
+Web framework.
+
+gunicorn:
+Production server used during deployment.
+
+numpy:
+Numerical operations and similarity data handling.
+
+pandas:
+DataFrame handling and loading pickle DataFrames.
+
+
+Procfile
+--------
+
+This file is used by platforms like Render or Heroku.
+
+Current command:
+
+web: gunicorn --chdir frontend app:app
+
+Meaning:
+
+web:
+Tells the deployment platform this is a web process.
+
+gunicorn:
+Runs the Flask app in production.
+
+--chdir frontend:
+First go inside the frontend folder.
+
+app:app:
+First app means app.py file.
+Second app means the Flask object inside app.py.
+
+
+Procfile.txt
+------------
+
+This is not needed for deployment.
+
+Deployment platforms usually look for a file named exactly Procfile, without .txt.
+So Procfile.txt can be deleted if Procfile already exists.
+
+
+flask/test.py
+-------------
+
+This is a very small test Flask app.
+
+It only returns:
+
+"Flask is running."
+
+It is not the main project.
+The main project is frontend/app.py.
+
+
+5. COMPLETE PROJECT FLOWCHART
+=============================
+
+High-level flow:
+
+Raw CSV Files
+Books.csv + Ratings.csv + Users.csv
+        |
+        v
+Jupyter Notebook
+book-recommender-system.ipynb
+        |
+        v
+Data Cleaning + Filtering + Similarity Calculation
+        |
+        v
+Pickle Files Created
+popular.pkl
+pt.pkl
+books.pkl
+similarity_scores.pkl
+        |
+        v
+Flask App Starts
+frontend/app.py
+        |
+        v
+User Opens Browser
+        |
+        v
+Home Page or Recommend Page
+        |
+        v
+Flask Sends Data to HTML Templates
+        |
+        v
+User Sees Book Cards / Recommendations
+
+
+6. WEBSITE REQUEST FLOWCHART
+============================
+
+Home page flow:
+
+User opens /
+        |
+        v
+Flask calls index() route
+        |
+        v
+index() reads popular_df loaded from popular.pkl
+        |
+        v
+Flask sends book_name, author, image, votes, rating to index.html
+        |
+        v
+index.html loops through all books using Jinja
+        |
+        v
+Browser shows top 50 book cards
+
+
+Recommend page flow:
+
+User opens /recommend
+        |
+        v
+Flask calls recommend_ui()
+        |
+        v
+recommend.html is rendered
+        |
+        v
+User types a book title
+        |
+        v
+User clicks Recommend
+        |
+        v
+Form sends POST request to /recommend_books
+        |
+        v
+Flask calls recommend()
+        |
+        v
+Book title is checked in pt.index
+        |
+        +-----------------------------+
+        |                             |
+        v                             v
+Book found                       Book not found
+        |                             |
+        v                             v
+Find similar books              Show error message
+        |
+        v
+Send recommended books to recommend.html
+        |
+        v
+Browser shows recommendation cards
+
+
+7. DATA PROCESSING FLOW IN NOTEBOOK
+===================================
+
+The notebook prepares the recommendation data.
+
+Step 1:
+Load Books.csv and Ratings.csv.
+
+Step 2:
+Merge ratings with book names using ISBN.
+
+Why?
+Ratings.csv has ISBN, but for display and recommendation we need book titles.
+
+Step 3:
+Create popular_df.
+
+For every book:
+
+- Count how many ratings it has
+- Calculate average rating
+- Keep only books with at least 250 ratings
+- Sort by average rating
+- Take top 50 books
+
+This becomes popular.pkl.
+
+Step 4:
+Filter active users.
+
+Only users who rated more than 200 books are selected.
+
+Why?
+Users with very few ratings may not give enough useful information.
+
+Step 5:
+Filter famous books.
+
+Only books that received at least 50 ratings from active users are selected.
+
+Why?
+Books with very few ratings may produce weak or noisy recommendations.
+
+Step 6:
+Create pivot table.
+
+Rows:
+Book titles
+
+Columns:
+User IDs
+
+Values:
+Ratings
+
+Missing ratings:
+Filled with 0
+
+This becomes pt.pkl.
+
+Step 7:
+Calculate cosine similarity.
+
+Each book is treated like a vector of user ratings.
+Cosine similarity compares the direction of two rating vectors.
+
+If two books were rated similarly by users, their cosine similarity is high.
+
+This becomes similarity_scores.pkl.
+
+Step 8:
+Save required book details.
+
+Book title, author, and image URL are saved into books.pkl.
+
+
+8. WHAT IS COLLABORATIVE FILTERING?
+===================================
+
+Collaborative filtering recommends items based on user behavior.
+
+In this project:
+
+- Users give ratings to books.
+- The system compares books based on rating patterns.
+- If the same type of users rated two books similarly, the books are considered similar.
+
+Example:
+
+If users who liked "Harry Potter" also liked "The Hobbit", then the system may recommend "The Hobbit" when someone enters "Harry Potter".
+
+This is called item-based collaborative filtering because the system compares items, meaning books.
+
+
+9. WHAT IS COSINE SIMILARITY?
+=============================
+
+Cosine similarity is a method to measure how similar two vectors are.
+
+In this project:
+
+Each book becomes a vector of user ratings.
+
+Example:
+
+Book A ratings:
+[5, 0, 8, 10]
+
+Book B ratings:
+[4, 0, 9, 10]
+
+These two books have a similar pattern, so their cosine similarity will be high.
+
+Cosine similarity value is usually between 0 and 1:
+
+0 means not similar.
+1 means very similar.
+
+
+10. WHAT IS PICKLE?
+===================
+
+Pickle is a Python module used to save Python objects into files.
+
+For example, a pandas DataFrame can be saved as:
+
+popular.pkl
+
+Later, the Flask app can load it back using:
+
+pickle.load(...)
+
+Why pickle is used here:
+
+The original CSV files are large.
+If the app processed them every time a user opened the website, it would be slow.
+
+So the notebook processes the data once and saves the final objects as pickle files.
+Then the Flask app directly loads those ready-made objects.
+
+This makes the app faster and simpler at runtime.
+
+Important point:
+Pickle files should only be loaded if they are created by us or from a trusted source.
+Loading unknown pickle files can be unsafe because pickle can execute Python object loading logic.
+
+
+11. HOW app.py WORKS STEP BY STEP
+=================================
+
+Code:
+
+BASE_DIR = Path(__file__).resolve().parent
+
+Meaning:
+This gets the folder where app.py is located.
+In this project, that folder is frontend.
+
+Why needed:
+If we run the app from the project root, files like popular.pkl are inside frontend.
+BASE_DIR helps the app find them correctly.
+
+
+Code:
+
+def load_pickle(filename):
+    with (BASE_DIR / filename).open('rb') as file:
+        return pickle.load(file)
+
+Meaning:
+This function opens a pickle file in binary read mode and returns the loaded object.
+
+
+Code:
+
+popular_df = load_pickle('popular.pkl')
+pt = load_pickle('pt.pkl')
+books = load_pickle('books.pkl')
+similarity_scores = load_pickle('similarity_scores.pkl')
+
+Meaning:
+When the Flask app starts, it loads all required processed data.
+
+
+Code:
+
+app = Flask(__name__, template_folder=str(BASE_DIR))
+
+Meaning:
+This creates the Flask app.
+template_folder tells Flask to find HTML files inside the frontend folder.
+
+
+Code:
+
+@app.route('/')
+def index():
+
+Meaning:
+This route runs when the user visits the home page.
+
+
+Code:
+
+return render_template(
+    'index.html',
+    book_name=list(popular_df['Book-Title'].values),
+    author=list(popular_df['Book-Author'].values),
+    image=list(popular_df['Image-URL-M'].values),
+    votes=list(popular_df['num_ratings'].values),
+    rating=[format_rating(value) for value in popular_df['avg_rating'].values],
+)
+
+Meaning:
+This sends popular book data to index.html.
+
+The HTML page receives:
+
+- book_name
+- author
+- image
+- votes
+- rating
+
+
+12. HOW RATINGS ARE SHORTENED
+=============================
+
+Function:
+
+def format_rating(value):
+    return f'{np.floor(float(value) * 100) / 100:.2f}'
+
+Purpose:
+This changes long rating values like:
+
+5.737410071942446
+
+into:
+
+5.73
+
+Step by step:
+
+float(value)
+Converts the value into a number.
+
+float(value) * 100
+Moves the decimal two places forward.
+
+5.737410071942446 becomes 573.7410071942446
+
+np.floor(...)
+Cuts off the extra decimal part.
+
+573.7410071942446 becomes 573
+
+/ 100
+Moves the decimal back.
+
+573 becomes 5.73
+
+:.2f
+Always shows two digits after the decimal.
+
+Example:
+
+5.7 becomes 5.70
+
+This is applied to all ratings using a list comprehension:
+
+[format_rating(value) for value in popular_df['avg_rating'].values]
+
+
+13. RECOMMENDATION FUNCTION EXPLANATION
+=======================================
+
+Route:
+
+@app.route('/recommend_books', methods=['POST'])
+def recommend():
+
+Meaning:
+This route handles the submitted recommendation form.
+
+
+Step 1:
+Read user input.
+
+user_input = request.form.get('user_input', '').strip()
+
+Meaning:
+Get the book name typed by the user.
+strip() removes extra spaces from the beginning and end.
+
+
+Step 2:
+Set book_title.
+
+book_title = user_input
+
+Meaning:
+By default, the book title is same as user input.
+
+
+Step 3:
+Case-insensitive matching.
+
+if user_input and user_input not in pt.index:
+    matches = [title for title in pt.index if title.lower() == user_input.lower()]
+    if matches:
+        book_title = matches[0]
+
+Meaning:
+If the exact title is not found, the app tries to match it by ignoring uppercase and lowercase differences.
+
+Example:
+
+If dataset has:
+"1984"
+
+and user types:
+"1984"
+
+It matches directly.
+
+If dataset has:
+"The Notebook"
+
+and user types:
+"the notebook"
+
+The lowercase comparison can still find it.
+
+
+Step 4:
+Handle missing book.
+
+if not book_title or book_title not in pt.index:
+    return render_template('recommend.html', data=[], error="Book not found. Please try another title.")
+
+Meaning:
+If the book is empty or not present in the pivot table, show an error message.
+
+
+Step 5:
+Find selected book index.
+
+index = np.where(pt.index == book_title)[0][0]
+
+Meaning:
+pt.index contains all book titles used in the recommendation model.
+This line finds the position number of the selected book.
+
+
+Step 6:
+Get similar items.
+
+similar_items = sorted(
+    list(enumerate(similarity_scores[index])),
+    key=lambda x: x[1],
+    reverse=True
+)[1:5]
+
+Meaning:
+
+similarity_scores[index]
+Gets similarity scores for the selected book against all 706 books.
+
+enumerate(...)
+Adds index numbers to each similarity score.
+
+sorted(...)
+Sorts books by similarity score.
+
+reverse=True
+Highest similarity first.
+
+[1:5]
+Skips the first item and selects the next 4 books.
+
+Why skip the first item?
+The most similar book to a book is the same book itself.
+Its similarity score is usually 1.
+So we skip it and show the next 4 books.
+
+
+Step 7:
+Create result data.
+
+data = []
+for i in similar_items:
+    temp_df = books[books['Book-Title'] == pt.index[i[0]]]
+    temp_df = temp_df.drop_duplicates('Book-Title')
+    item = [
+        temp_df['Book-Title'].values[0],
+        temp_df['Book-Author'].values[0],
+        temp_df['Image-URL-M'].values[0],
+    ]
+    data.append(item)
+
+Meaning:
+For each similar book, get:
+
+- Title
+- Author
+- Image
+
+Then add it to data.
+
+
+Step 8:
+Send result to HTML.
+
+return render_template('recommend.html', data=data)
+
+Meaning:
+The recommendation page receives data and displays the recommended book cards.
+
+
+14. HOW index.html WORKS
+========================
+
+index.html receives data from app.py:
+
+- book_name
+- author
+- image
+- votes
+- rating
+
+Important Jinja loop:
+
+{% for i in range(book_name|length) %}
+
+Meaning:
+Loop from 0 to number of books.
+
+Inside each loop, one card is created.
+
+Important values:
+
+{{ image[i] }}
+Shows book image.
+
+{{ book_name[i] }}
+Shows book title.
+
+{{ author[i] }}
+Shows author name.
+
+{{ rating[i] }}
+Shows formatted rating.
+
+{{ votes[i] }}
+Shows number of ratings/votes.
+
+
+15. HOW recommend.html WORKS
+============================
+
+recommend.html has two jobs:
+
+1. Take input from user.
+2. Display recommendation results.
+
+Input form:
+
+<form action="/recommend_books" method="post">
+
+Meaning:
+Submit the typed book title to Flask route /recommend_books.
+
+Input field:
+
+<input type="text" name="user_input">
+
+Meaning:
+The field name is user_input, so Flask can read it.
+
+Error display:
+
+{% if error %}
+  <p class="error-message">{{ error }}</p>
+{% endif %}
+
+Meaning:
+If Flask sends an error, show it on the page.
+
+Result display:
+
+{% if data %}
+  ...
+  {% for item in data %}
+  ...
+  {% endfor %}
+{% else %}
+  ...
+{% endif %}
+
+Meaning:
+If recommendations are available, show book cards.
+Otherwise show an empty state.
+
+Each item contains:
+
+item[0] = book title
+item[1] = author
+item[2] = image URL
+
+
+16. FRONTEND AND BACKEND CONNECTION
+===================================
+
+The frontend and backend are connected through Flask templates.
+
+Backend:
+app.py
+
+Frontend:
+index.html and recommend.html
+
+Flask sends data like this:
+
+render_template('index.html', book_name=..., author=...)
+
+HTML receives data like this:
+
+{{ book_name[i] }}
+
+This is called server-side rendering.
+The HTML is generated by Flask on the server, then sent to the browser.
+
+
+17. WHY CSV FILES ARE NOT LOADED IN app.py
+==========================================
+
+The CSV files are large.
+
+If app.py loaded and processed Books.csv and Ratings.csv every time the website starts, startup would be slow.
+
+So the notebook already processed the CSV files once and saved final objects as pickle files.
+
+At runtime, Flask only loads the pickle files.
+
+This is faster.
+
+
+18. WHY THERE ARE FOUR PICKLE FILES
+===================================
+
+popular.pkl:
+Needed for home page popular books.
+
+pt.pkl:
+Needed to know which books exist in the recommendation model and to map book titles to row indexes.
+
+books.pkl:
+Needed to get title, author, and image for displaying recommendation cards.
+
+similarity_scores.pkl:
+Needed to quickly find similar books without recalculating cosine similarity.
+
+
+19. IMPORTANT TERMS
+===================
+
+Flask:
+A Python framework for creating web applications.
+
+Route:
+A URL path handled by a function.
+Example: /recommend
+
+Template:
+An HTML file that can receive Python data.
+
+Jinja:
+The template language used by Flask.
+It allows syntax like {{ variable }} and {% for ... %}.
+
+DataFrame:
+A table-like data structure from pandas.
+
+Pivot table:
+A table created by rearranging data.
+In this project, rows are books, columns are users, values are ratings.
+
+Cosine similarity:
+A method to calculate similarity between vectors.
+
+Pickle:
+A Python file format used to save and load Python objects.
+
+Collaborative filtering:
+A recommendation method based on user behavior.
+
+
+20. LIMITATIONS OF THIS PROJECT
+===============================
+
+1. Book title must exist in pt.pkl.
+If the user enters a book not present in the pivot table, the app cannot recommend.
+
+2. It uses old rating data.
+Recommendations depend on the dataset, not live data.
+
+3. It does not understand book content.
+It does not analyze genre, plot, language, or description.
+
+4. It recommends only 4 books.
+The code takes [1:5], which gives 4 recommendations.
+
+5. Pickle files must match the installed pandas/numpy versions.
+If pickles were created with very old versions, loading them in a newer version may fail.
+
+
+21. COMMON TEACHER QUESTIONS AND ANSWERS
+========================================
+
+Question:
+What is the main purpose of this project?
+
+Answer:
+The main purpose is to recommend similar books based on user rating patterns and also show top popular books.
+
+
+Question:
+Which algorithm is used?
+
+Answer:
+Item-based collaborative filtering using cosine similarity.
+
+
+Question:
+Why is it called collaborative filtering?
+
+Answer:
+Because recommendations are based on many users' rating behavior. The system learns similarity from how users collectively rated books.
+
+
+Question:
+What is the role of Flask?
+
+Answer:
+Flask handles the web application. It creates routes, receives user input, loads data, and renders HTML pages.
+
+
+Question:
+What is the role of pandas?
+
+Answer:
+Pandas is used for DataFrames like popular_df, pt, and books. These are loaded from pickle files.
+
+
+Question:
+What is the role of numpy?
+
+Answer:
+NumPy is used for numerical operations, such as finding the index of a selected book and formatting rating values.
+
+
+Question:
+Why did you use pickle files?
+
+Answer:
+Pickle files store already processed data, so the Flask app does not need to process large CSV files every time it starts.
+
+
+Question:
+What is pt.pkl?
+
+Answer:
+It is the pivot table where rows are book titles, columns are user IDs, and values are ratings. It is used to map book titles to similarity matrix indexes.
+
+
+Question:
+What is similarity_scores.pkl?
+
+Answer:
+It is a 706 by 706 matrix containing similarity scores between every pair of books.
+
+
+Question:
+Why is similarity_scores shape 706 by 706?
+
+Answer:
+Because the recommendation model contains 706 books. Every book is compared with every other book.
+
+
+Question:
+Why do you skip the first recommendation?
+
+Answer:
+The first item after sorting is the same book entered by the user, because a book is most similar to itself. So we skip it using [1:5].
+
+
+Question:
+What happens if the user enters a wrong book name?
+
+Answer:
+The app checks if the title exists in pt.index. If it does not exist, it displays "Book not found. Please try another title."
+
+
+Question:
+What is the difference between index.html and recommend.html?
+
+Answer:
+index.html is the home page that shows popular books. recommend.html is the page where the user enters a book title and sees recommended books.
+
+
+Question:
+Does the app use machine learning in real time?
+
+Answer:
+No. The similarity matrix is already calculated and saved. At runtime, the app only loads the saved matrix and uses it to find similar books quickly.
+
+
+Question:
+Can this project recommend a newly added book?
+
+Answer:
+Not immediately. The new book must be added to the dataset, the pivot table and similarity matrix must be regenerated, and the pickle files must be updated.
+
+
+Question:
+Why do you use render_template?
+
+Answer:
+render_template lets Flask send Python data to HTML templates and generate dynamic pages.
+
+
+Question:
+What is the use of requirements.txt?
+
+Answer:
+It lists all required Python packages so the project can be installed and deployed correctly.
+
+
+Question:
+What is the use of Procfile?
+
+Answer:
+It tells deployment platforms like Render or Heroku how to start the web app using gunicorn.
+
+
+Question:
+Is Procfile.txt needed?
+
+Answer:
+No. The correct deployment file is named Procfile without .txt.
+
+
+Question:
+Why are ratings shown with only two digits?
+
+Answer:
+The function format_rating formats every average rating to two decimal places before sending it to index.html.
+
+
+22. SIMPLE PRESENTATION SCRIPT
+==============================
+
+You can say this in class:
+
+"My project is a Book Recommendation System built using Flask. It has a home page that shows the top 50 popular books and a recommendation page where the user enters a book title. The recommendation system is based on item-based collaborative filtering. I used user ratings to create a pivot table where each book is represented as a vector of user ratings. Then I calculated cosine similarity between books. The processed data and similarity matrix are saved as pickle files. This helps the Flask app load the model quickly without processing the large CSV files every time. When a user enters a book, Flask finds its index in the pivot table, checks the similarity matrix, sorts the most similar books, skips the same book, and displays the next four similar books with title, author, and image."
+
+
+23. ONE-LINE EXPLANATION FOR EACH MAIN FILE
+===========================================
+
+frontend/app.py:
+Main Flask backend that loads data, defines routes, and recommends books.
+
+frontend/index.html:
+Home page template that shows top 50 popular books.
+
+frontend/recommend.html:
+Recommendation page template with search form and result cards.
+
+frontend/popular.pkl:
+Saved popular books data for home page.
+
+frontend/pt.pkl:
+Saved pivot table used to find book indexes.
+
+frontend/books.pkl:
+Saved book metadata used to display title, author, and image.
+
+frontend/similarity_scores.pkl:
+Saved similarity matrix used to recommend books.
+
+Books.csv:
+Original book metadata dataset.
+
+Ratings.csv:
+Original user ratings dataset.
+
+Users.csv:
+Original user information dataset.
+
+book-recommender-system.ipynb:
+Notebook used to process data and generate pickle files.
+
+requirements.txt:
+Python dependencies.
+
+Procfile:
+Deployment startup command.
+
+explanation.txt:
+Project explanation notes.
+
+
+24. FINAL SUMMARY
+=================
+
+This project has two parts:
+
+1. Data preparation:
+Done in the notebook using CSV files.
+It creates popular books, pivot table, book metadata, and similarity matrix.
+
+2. Web application:
+Done in Flask.
+It loads pickle files and serves pages to the user.
+
+The recommendation logic is:
+
+Input book title
+        |
+Find book index in pt.pkl
+        |
+Read similarity scores from similarity_scores.pkl
+        |
+Sort books by similarity
+        |
+Skip the same book
+        |
+Get title, author, image from books.pkl
+        |
+Show recommendations in recommend.html
+
+This is how the complete system works from data to final output.
+
+
+25. HOW TO START THE FRONTEND / WEBSITE
+=======================================
+
+To start the website, open PowerShell or terminal in the project root folder.
+
+Project root means this folder:
+
+Book Recommendation/
+
+Then run:
+
+py frontend\app.py
+
+After running the command, Flask will start the local development server.
+
+Then open this URL in the browser:
+
+http://127.0.0.1:5000/
+
+This opens the home page of the BookLens project.
+
+To open the recommendation page directly, use:
+
+http://127.0.0.1:5000/recommend
+
+
+If port 5000 is already busy
+----------------------------
+
+Run the app on another port, for example 5001:
+
+$env:PORT="5001"; py frontend\app.py
+
+Then open:
+
+http://127.0.0.1:5001/
+
+
+Important note
+--------------
+
+On this machine, the python command may not work because it points to the Windows Store shortcut.
+So use:
+
+py frontend\app.py
+
+instead of:
+
+python frontend\app.py
+
+
+How to stop the server
+----------------------
+
+Go back to the terminal where Flask is running and press:
+
+Ctrl + C
+
+This stops the local Flask server.
